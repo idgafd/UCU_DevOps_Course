@@ -4,20 +4,20 @@ A Flask-based machine learning web application for predicting the type of Iris f
 
 ## Installation & Setup
 
-### 1. Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/idgafd/UCU_DevOps_Course.git
 cd UCU_DevOps_Course/ml-app
 ```
 
-### 2. Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run the Application
+### Run the Application
 
 ```bash
 python app.py
