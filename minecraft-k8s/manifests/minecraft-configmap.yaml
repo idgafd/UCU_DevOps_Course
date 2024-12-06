@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minecraft-config
+  namespace: minecraft # consistent namespace
+data:
+  EULA: "TRUE" # agree to minecraft's end user license agreement

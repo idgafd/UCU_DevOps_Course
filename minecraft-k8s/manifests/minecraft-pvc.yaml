@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minecraft-pv # PersistentVolume for data storage
+  namespace: minecraft
+spec:
+  capacity:
+    storage: 5Gi # total storage capacity
+  accessModes:
+    - ReadWriteOnce # allow single node to read/write
+  hostPath:
+    path: /data/minecraft # path on the Kubernetes node for storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minecraft-pvc # PersistentVolumeClaim to request storage
+  namespace: minecraft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi # storage request size

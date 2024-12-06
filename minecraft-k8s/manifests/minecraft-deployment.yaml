@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft
+  namespace: minecraft # isolate resources in a dedicated namespace
+spec:
+  replicas: 1 # number of pod replicas
+  strategy:
+    type: RollingUpdate # smooth updates without downtime
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: minecraft # match pods with the specified label
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      containers:
+      - name: minecraft
+        image: itzg/minecraft-server # minecraft server image
+        ports:
+        - containerPort: 25565 # standard minecraft server port
+        envFrom:
+        - configMapRef:
+            name: minecraft-config # load environment variables from ConfigMap
+        resources:
+          requests:
+            memory: "1Gi" # minimum memory required
+            cpu: "500m" # minimum CPU required
+          limits:
+            memory: "1.5Gi" # maximum memory allowed
+            cpu: "1" # maximum CPU allowed
+        volumeMounts:
+        - mountPath: /data # mount the data directory in the container
+          name: minecraft-data
+      volumes:
+      - name: minecraft-data
+        persistentVolumeClaim:
+          claimName: minecraft-pvc # link to PersistentVolumeClaim
