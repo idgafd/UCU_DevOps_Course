@@ -135,7 +135,7 @@ jobs:
             echo "OLD_NAMESPACE=python-app-blue" >> $GITHUB_ENV
          else
             echo "Both namespaces are present. Determining active namespace..."
-            activeNamespace=`kubectl get service my-app -o=jsonpath='{.spec.selector.version}'`
+            activeNamespace=`kubectl get service hello-gitops -o=jsonpath='{.spec.selector.version}'`
 
             if [ "$activeNamespace" == "v1.0.0" ]
             then
