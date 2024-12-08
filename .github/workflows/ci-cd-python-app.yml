@@ -102,7 +102,12 @@ jobs:
 
     - name: Install gke-gcloud-auth-plugin
       run: |
-        sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+        # Install Google Cloud SDK
+        curl https://sdk.cloud.google.com | bash
+        exec -l $SHELL
+        
+        # Install the GKE authentication plugin
+        gcloud components install gke-gcloud-auth-plugi
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
