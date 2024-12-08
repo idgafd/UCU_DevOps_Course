@@ -123,45 +123,42 @@ jobs:
          then
             kubectl create ns python-app-blue
             cd $GITHUB_WORKSPACE/github-actions-samples/k8s
-            kustomize edit set namespace python-app-blue
+            # kustomize edit set namespace python-app-blue
             echo "NEW_NAMESPACE=python-app-blue" >> $GITHUB_ENV
             echo "OLD_NAMESPACE=python-app-green" >> $GITHUB_ENV
          elif [ $namespacePresentGreen -eq 0 ]
          then
             kubectl create ns python-app-green
             cd $GITHUB_WORKSPACE/github-actions-samples/k8s
-            kustomize edit set namespace python-app-green
+            # kustomize edit set namespace python-app-green
             echo "NEW_NAMESPACE=python-app-green" >> $GITHUB_ENV
             echo "OLD_NAMESPACE=python-app-blue" >> $GITHUB_ENV
          else
             echo "Both namespaces are present. Determining active namespace..."
-            activeNamespace=`kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}'`
-
-            if [ "$activeNamespace" == "v1.0.0" ]
-            then
+            bluePods=$(kubectl get pods -n python-app-blue --selector=app=hello-gitops -o jsonpath='{.items[*].metadata.name}' | wc -w)
+            greenPods=$(kubectl get pods -n python-app-green --selector=app=hello-gitops -o jsonpath='{.items[*].metadata.name}' | wc -w)
+            if [ $bluePods -gt $greenPods ]; then
                 echo "Currently serving traffic on python-app-blue."
-                echo "Updating python-app-green..."
                 echo "NEW_NAMESPACE=python-app-green" >> $GITHUB_ENV
                 echo "OLD_NAMESPACE=python-app-blue" >> $GITHUB_ENV
             else
                 echo "Currently serving traffic on python-app-green."
-                echo "Updating python-app-blue..."
                 echo "NEW_NAMESPACE=python-app-blue" >> $GITHUB_ENV
                 echo "OLD_NAMESPACE=python-app-green" >> $GITHUB_ENV
             fi
          fi
 
-    # - name: Update Kubernetes resources
-    #   env:
-    #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-    #   run: |
-    #    cd $GITHUB_WORKSPACE/github-actions-samples/k8s
-    #    kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-    #    cat kustomization.yaml
+    - name: Update Kubernetes resources
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      run: |
+       cd $GITHUB_WORKSPACE/github-actions-samples/k8s
+       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       cat kustomization.yaml
     
-    # - name: Deploy updated Kubernetes resources
-    #   run: |
-    #     kubectl apply -k github-actions-samples/k8s/ 
+    - name: Deploy updated Kubernetes resources
+      run: |
+        kubectl apply -k github-actions-samples/k8s/ 
    
     # # DO SOME CHECKS HERE BEFORE COMMIT
     # #- name: Deploy updated Kubernetes resources
@@ -187,14 +184,16 @@ jobs:
     #   uses: ad-m/github-push-action@master
     #   with:
     #     github_token: ${{ secrets.GITHUB_TOKEN }} 
-    - name: Update Kubernetes resources
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      run: |
-        cd $GITHUB_WORKSPACE/github-actions-samples/k8s
-        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-        kustomize edit set namespace $NEW_NAMESPACE
-        kubectl apply -k .
+
+    ## With namespace replacement
+    # - name: Update Kubernetes resources
+    #   env:
+    #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+    #   run: |
+    #     cd $GITHUB_WORKSPACE/github-actions-samples/k8s
+    #     kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+    #     kustomize edit set namespace $NEW_NAMESPACE
+    #     kubectl apply -k .
 
     # - name: Switch traffic to new namespace
     #   run: |
