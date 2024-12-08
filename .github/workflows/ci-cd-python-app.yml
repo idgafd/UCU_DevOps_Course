@@ -204,11 +204,12 @@ jobs:
         currentVersion=$(kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}')
         
         # Increment the version
-        newVersion=$(echo $currentVersion | awk -F. '{$NF = $NF + 1; OFS = "."; print $0}')
+        newVersion=$(echo $currentVersion | awk -F. '{$NF = $NF + 1; OFS = "."; print $0}' | tr -d '[:space:]')
         
         # Patch the service with the new version
         echo "Updating service to use version $newVersion..."
         kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
+
 
 
     - name: Remove old namespace
