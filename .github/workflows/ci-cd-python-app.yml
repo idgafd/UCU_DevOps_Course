@@ -134,43 +134,85 @@ jobs:
             echo "NEW_NAMESPACE=python-app-green" >> $GITHUB_ENV
             echo "OLD_NAMESPACE=python-app-blue" >> $GITHUB_ENV
          else
-            echo "Both Blue and Green namespaces are present! Exiting"
-            exit 1
+            echo "Both namespaces are present. Determining active namespace..."
+            activeNamespace=`kubectl get service my-app -o=jsonpath='{.spec.selector.version}'`
+
+            if [ "$activeNamespace" == "v1.0.0" ]
+            then
+                echo "Currently serving traffic on python-app-blue."
+                echo "Updating python-app-green..."
+                echo "NEW_NAMESPACE=python-app-green" >> $GITHUB_ENV
+                echo "OLD_NAMESPACE=python-app-blue" >> $GITHUB_ENV
+            else
+                echo "Currently serving traffic on python-app-green."
+                echo "Updating python-app-blue..."
+                echo "NEW_NAMESPACE=python-app-blue" >> $GITHUB_ENV
+                echo "OLD_NAMESPACE=python-app-green" >> $GITHUB_ENV
+            fi
          fi
 
+    # - name: Update Kubernetes resources
+    #   env:
+    #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+    #   run: |
+    #    cd $GITHUB_WORKSPACE/github-actions-samples/k8s
+    #    kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+    #    cat kustomization.yaml
+    
+    # - name: Deploy updated Kubernetes resources
+    #   run: |
+    #     kubectl apply -k github-actions-samples/k8s/ 
+   
+    # # DO SOME CHECKS HERE BEFORE COMMIT
+    # #- name: Deploy updated Kubernetes resources
+    # #  run: |
+    # #    kubectl apply -k github-actions-samples/k8s/
+
+    # # REMOVE OLD DEPLOYMENT!!
+    # - name: Remove old namespace
+    #   run: |
+    #     namespacePresentOld=`kubectl get ns | grep ${{ env.OLD_NAMESPACE }} | wc -l`
+    #     if [ $namespacePresentOld -eq 1 ]
+    #     then
+    #       kubectl delete ns ${{ env.OLD_NAMESPACE }} --wait=true
+    #     fi
+ 
+    # - name: Commit files
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
+    #     git commit -am "Bump docker tag"
+        
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }} 
     - name: Update Kubernetes resources
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-       cd github-actions-samples/k8s
-       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-       cat kustomization.yaml
-    
-    - name: Deploy updated Kubernetes resources
-      run: |
-        kubectl apply -k github-actions-samples/k8s/ 
-   
-    # DO SOME CHECKS HERE BEFORE COMMIT
-    #- name: Deploy updated Kubernetes resources
-    #  run: |
-    #    kubectl apply -k github-actions-samples/k8s/
+        cd $GITHUB_WORKSPACE/github-actions-samples/k8s
+        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+        kustomize edit set namespace $NEW_NAMESPACE
+        kubectl apply -k .
 
-    # REMOVE OLD DEPLOYMENT!!
+    - name: Switch traffic to new namespace
+      run: |
+        echo "Switching traffic to $NEW_NAMESPACE..."
+        kubectl patch service my-app -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
+    
     - name: Remove old namespace
       run: |
-        namespacePresentOld=`kubectl get ns | grep ${{ env.OLD_NAMESPACE }} | wc -l`
-        if [ $namespacePresentOld -eq 1 ]
-        then
-          kubectl delete ns ${{ env.OLD_NAMESPACE }} --wait=true
-        fi
- 
+        echo "Removing old namespace: $OLD_NAMESPACE"
+        kubectl delete ns $OLD_NAMESPACE --wait=true
+    
     - name: Commit files
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git commit -am "Bump docker tag"
-        
+    
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }} 
+        github_token: ${{ secrets.GITHUB_TOKEN }}
