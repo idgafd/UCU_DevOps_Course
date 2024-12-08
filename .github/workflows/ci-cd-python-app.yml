@@ -248,7 +248,14 @@ jobs:
           git add github-actions-samples/k8s/service.yaml
           git commit -m "Update service.yaml to reflect version $newVersion"
         fi
-    
+
+    - name: Pull latest changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git fetch origin
+        git rebase origin/main || echo "Rebase not required"
+        
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
