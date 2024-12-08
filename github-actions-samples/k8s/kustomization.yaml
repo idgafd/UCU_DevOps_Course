@@ -8,4 +8,4 @@ namespace: python-app-blue
 images:
 - name: hello-gitops
   newName: idgafd/hello-gitops
-  newTag: a721bcbc3403ac9957f6367a92b90b295e4249e1
+  newTag: 9508eaf6337485aefc4314cc0bf73e4134948898
