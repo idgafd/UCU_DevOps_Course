@@ -8,4 +8,4 @@ namespace: hello-gitops
 images:
 - name: hello-gitops
   newName: idgafd/hello-gitops
-  newTag: ae293497841be08570d70fa3f2fa250bc9696879
+  newTag: 3bb166d76dea9dd6ed189c9f2afc02a06124edee
