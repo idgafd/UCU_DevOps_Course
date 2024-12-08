@@ -201,20 +201,6 @@ jobs:
     #     echo "Switching traffic to $NEW_NAMESPACE..."
     #     kubectl patch service hello-gitops -n hello-gitops -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
 
-    # - name: Switch traffic to new namespace
-    #   run: |
-    #     echo "Switching traffic to $NEW_NAMESPACE..."
-        
-    #     # Get the current version from the service selector
-    #     currentVersion=$(kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}')
-        
-    #     # Increment the version
-    #     newVersion=$(echo $currentVersion | awk -F. '{$NF = $NF + 1; OFS = "."; print $0}' | tr -d '[:space:]')
-        
-    #     # Patch the service with the new version
-    #     echo "Updating service to use version $newVersion..."
-    #     kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
-
     - name: Switch traffic to new namespace
       run: |
         echo "Switching traffic to $NEW_NAMESPACE..."
@@ -239,6 +225,13 @@ jobs:
     #     git config --local user.email "action@github.com"
     #     git config --local user.name "GitHub Action"
     #     git commit -am "Bump docker tag"
+
+    - name: Update service.yaml with the new version
+      run: |
+        echo "Updating service.yaml with version $newVersion..."
+        sed -i "s/version: .*/version: $newVersion/" github-actions-samples/k8s/service.yaml
+        echo "Updated service.yaml:"
+        cat github-actions-samples/k8s/service.yaml
 
     - name: Commit updated service.yaml
       run: |
