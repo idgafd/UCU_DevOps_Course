@@ -196,10 +196,10 @@ jobs:
         kustomize edit set namespace $NEW_NAMESPACE
         kubectl apply -k .
 
-    - name: Switch traffic to new namespace
-      run: |
-        echo "Switching traffic to $NEW_NAMESPACE..."
-        kubectl patch service hello-gitops -n hello-gitops -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
+    # - name: Switch traffic to new namespace
+    #   run: |
+    #     echo "Switching traffic to $NEW_NAMESPACE..."
+    #     kubectl patch service hello-gitops -n hello-gitops -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
 
     # - name: Switch traffic to new namespace
     #   run: |
@@ -215,16 +215,45 @@ jobs:
     #     echo "Updating service to use version $newVersion..."
     #     kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
 
+    - name: Switch traffic to new namespace
+      run: |
+        echo "Switching traffic to $NEW_NAMESPACE..."
+        
+        # Get the current version from the service selector
+        currentVersion=$(kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}')
+        
+        # Increment the patch version (Z) in X.Y.Z format
+        newVersion=$(echo $currentVersion | awk -F. '{$NF = $NF + 1; print $1"."$2"."$3}' | tr -d '[:space:]')
+        
+        # Patch the service with the new version
+        echo "Updating service to use version $newVersion..."
+        kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
+
     - name: Remove old namespace
       run: |
         echo "Removing old namespace: $OLD_NAMESPACE"
         kubectl delete ns $OLD_NAMESPACE --wait=true
     
-    - name: Commit files
+    # - name: Commit files
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
+    #     git commit -am "Bump docker tag"
+
+    - name: Commit updated service.yaml
       run: |
+        echo "Configuring Git for commit..."
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git commit -am "Bump docker tag"
+    
+        echo "Checking for changes in service.yaml..."
+        if git diff --exit-code github-actions-samples/k8s/service.yaml; then
+          echo "No changes detected in service.yaml. Skipping commit."
+        else
+          echo "Changes detected in service.yaml. Committing changes..."
+          git add github-actions-samples/k8s/service.yaml
+          git commit -m "Update service.yaml to reflect version $newVersion"
+        fi
     
     - name: Push changes
       uses: ad-m/github-push-action@master
