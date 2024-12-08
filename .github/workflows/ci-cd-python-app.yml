@@ -209,7 +209,6 @@ jobs:
         echo "Updating service to use version $newVersion..."
         kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
 
-    
     - name: Remove old namespace
       run: |
         echo "Removing old namespace: $OLD_NAMESPACE"
