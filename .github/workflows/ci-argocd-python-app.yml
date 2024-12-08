@@ -104,11 +104,19 @@ jobs:
     #     git config --local user.email "action@github.com"
     #     git config --local user.name "GitHub Action"
     #     git commit -am "Bump docker tag"
+    - name: Stash any local changes
+      run: |
+        git stash --include-untracked
+
     - name: Pull changes from remote
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git pull --rebase origin main
+
+    - name: Apply stashed changes (if any)
+      run: |
+        git stash pop || echo "No stashed changes to apply"
         
     - name: Commit changes if any
       run: |
