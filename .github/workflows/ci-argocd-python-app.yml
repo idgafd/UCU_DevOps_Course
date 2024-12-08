@@ -104,6 +104,12 @@ jobs:
     #     git config --local user.email "action@github.com"
     #     git config --local user.name "GitHub Action"
     #     git commit -am "Bump docker tag"
+    - name: Pull changes from remote
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git pull --rebase origin main
+        
     - name: Commit changes if any
       run: |
         git config --local user.email "action@github.com"
