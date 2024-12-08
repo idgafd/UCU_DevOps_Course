@@ -199,7 +199,16 @@ jobs:
     - name: Switch traffic to new namespace
       run: |
         echo "Switching traffic to $NEW_NAMESPACE..."
-        kubectl patch service hello-gitops -n hello-gitops -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
+        # Get the current version from the service selector
+        currentVersion=`kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}'`
+    
+        # Increment the version
+        newVersion=$(echo $currentVersion | awk -F. '{$NF = $NF + 1; OFS = "."; print $0}')
+        
+        # Patch the service with the new version
+        echo "Updating service to use version $newVersion..."
+        kubectl patch service hello-gitops -n hello-gitops -p "{\"spec\":{\"selector\":{\"version\":\"$newVersion\"}}}"
+
     
     - name: Remove old namespace
       run: |
