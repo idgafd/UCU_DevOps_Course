@@ -199,7 +199,7 @@ jobs:
     - name: Switch traffic to new namespace
       run: |
         echo "Switching traffic to $NEW_NAMESPACE..."
-        kubectl patch service my-app -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
+        kubectl patch service hello-gitops -p '{"spec":{"selector":{"version":"v2.0.0"}}}'
     
     - name: Remove old namespace
       run: |
