@@ -228,6 +228,8 @@ jobs:
 
     - name: Update service.yaml with the new version
       run: |
+        echo "Fetching currently new version from service selector..."
+        $newVersion=$(kubectl get service hello-gitops -n hello-gitops -o=jsonpath='{.spec.selector.version}')
         echo "Updating service.yaml with version $newVersion..."
         sed -i "s/version: .*/version: $newVersion/" github-actions-samples/k8s/service.yaml
         echo "Updated service.yaml:"
